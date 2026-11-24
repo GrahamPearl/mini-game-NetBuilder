@@ -1,0 +1,51 @@
+{
+  "levelId": 2,
+  "title": "Level 2: Expanding Next Door",
+  "briefing": "Connect all 4 PCs and the Network Printer across both offices to the Server Room. Keep total costs under $850 and ensure every device gets a unique IP.",
+  "grid": {
+    "cols": 20,
+    "rows": 12,
+    "metersPerCell": 2
+  },
+  "economics": {
+    "budget": 850,
+    "wallDrillCost": 60,
+    "cables": {
+      "ethernet": { "label": "Cat6 Ethernet", "costPerMeter": 3, "maxMeters": 100, "speed": 1.5, "color": "#38bdf8" },
+      "fibre": { "label": "Fibre Optic", "costPerMeter": 10, "maxMeters": 500, "speed": 4.0, "color": "#f59e0b" }
+    },
+    "devices": {
+      "switch4": { "label": "4-Port Switch", "cost": 80, "ports": 4 },
+      "router": { "label": "Smart Gateway", "cost": 150, "ports": 4 }
+    }
+  },
+  "rooms": [
+    { "name": "Main Office", "x": 1, "y": 1, "w": 9, "h": 10, "color": "#1e293b" },
+    { "name": "Annex Office", "x": 10, "y": 1, "w": 9, "h": 6, "color": "#1e293b" },
+    { "name": "Server Closet", "x": 10, "y": 7, "w": 9, "h": 4, "color": "#0f172a" }
+  ],
+  "walls": [
+    { "x1": 10, "y1": 1, "x2": 10, "y2": 7, "drillable": true, "type": "drywall" },
+    { "x1": 10, "y1": 7, "x2": 10, "y2": 11, "drillable": true, "type": "drywall" },
+    { "x1": 10, "y1": 7, "x2": 19, "y2": 7, "drillable": true, "type": "drywall" }
+  ],
+  "fixedNodes": [
+    { "id": "srv_1", "type": "server", "label": "Main Server", "x": 16, "y": 9, "fixedIp": "192.168.1.1", "ports": 2 },
+    { "id": "pc_1", "type": "pc", "label": "PC-01", "x": 3, "y": 3, "ports": 1 },
+    { "id": "pc_2", "type": "pc", "label": "PC-02", "x": 3, "y": 8, "ports": 1 },
+    { "id": "prn_1", "type": "printer", "label": "Office Printer", "x": 7, "y": 9, "ports": 1 },
+    { "id": "pc_3", "type": "pc", "label": "PC-03", "x": 13, "y": 3, "ports": 1 },
+    { "id": "pc_4", "type": "pc", "label": "PC-04", "x": 17, "y": 4, "ports": 1 }
+  ],
+  "availableHardware": ["switch4", "router"],
+  "starterBlocks": [
+    { "type": "SET_VAR", "var": "host_id", "value": 10 },
+    { "type": "LOOP_DEVICES" },
+    { "type": "IF_PRINTER", "staticHost": 50 },
+    { "type": "ELSE_ASSIGN_INCREMENT", "var": "host_id" }
+  ],
+  "winConditions": {
+    "subnetPrefix": "192.168.1.",
+    "maxSimSeconds": 12
+  }
+}

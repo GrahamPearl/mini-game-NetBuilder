@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetBuilder v6 — Office &amp; Campus Network Tycoon</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --border: #334155;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --purple: #a855f7;
+    --cyan: #06b6d4;
+  }
+  * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+  body { margin: 0; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+  header {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 8px 16px; background: var(--panel); border-bottom: 1px solid var(--border);
+  }
+  .brand-level { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  select.level-select {
+    background: var(--bg); color: var(--text); border: 1px solid var(--accent);
+    padding: 5px 9px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;
+  }
+  .hud-stats { display: flex; gap: 8px; font-weight: 600; font-size: 0.82rem; flex-wrap: wrap; }
+  .stat-box { background: var(--bg); padding: 5px 9px; border-radius: 6px; border: 1px solid var(--border); }
+  .budget-ok { color: var(--green); }
+  .budget-over { color: var(--red); }
+
+  main { display: grid; grid-template-columns: 1fr 395px; flex: 1; overflow: hidden; position: relative; }
+
+  .map-area { display: flex; flex-direction: column; padding: 9px 12px; gap: 7px; overflow: hidden; }
+  .toolbar { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .tool-sep { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+  button {
+    background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    padding: 5px 8px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.77rem;
+    transition: all 0.14s;
+  }
+  button:hover { border-color: var(--accent); }
+  button.active { background: var(--accent); color: #0f172a; border-color: var(--accent); }
+  button.route-btn.active { background: #0284c7; color: #ffffff; border-color: #38bdf8; }
+  button.notes-btn { background: #134e4a; border-color: #2dd4bf; color: #ccfbf1; }
+  button.notes-btn:hover { background: #0f766e; }
+  button.sol-btn { background: #312e81; border-color: #818cf8; color: #e0e7ff; }
+  button.sol-btn:hover { background: #4338ca; }
+  button.sim-btn { background: #0369a1; border-color: #38bdf8; color: #ffffff; }
+  button.sim-btn:hover { background: #075985; }
+  button.run-btn { background: var(--green); color: #052e16; border: none; margin-left: auto; font-size: 0.83rem; padding: 6px 11px; }
+  button.run-btn:hover { filter: brightness(1.08); }
+  button.reset-btn { background: #475569; border: none; }
+
+  .review-bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    background: #0b1120; border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 11px; font-size: 0.79rem;
+  }
+  .phase-pill {
+    background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4);
+    color: var(--accent); padding: 2px 8px; border-radius: 999px; font-weight: 700; font-size: 0.73rem;
+  }
+  .review-caption { color: #e2e8f0; flex: 1; min-width: 170px; }
+  .review-controls { display: flex; gap: 4px; align-items: center; }
+  .review-controls button { padding: 3px 7px; font-size: 0.75rem; }
+
+  .canvas-wrap {
+    flex: 1; background: #090d16; border: 1px solid var(--border); border-radius: 8px;
+    display: flex; justify-content: center; align-items: center; position: relative;
+  }
+  canvas { background: #0f172a; border-radius: 4px; cursor: crosshair; }
+
+  .code-panel {
+    background: var(--panel); border-left: 1px solid var(--border);
+    padding: 12px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto;
+  }
+  .code-panel h2 { margin: 0; font-size: 0.98rem; color: var(--accent); }
+  .briefing { font-size: 0.8rem; color: var(--muted); line-height: 1.38; background: var(--bg); padding: 8px 10px; border-radius: 6px; }
+  .objectives-box {
+    background: #0b1120; border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 6px; padding: 7px 10px; font-size: 0.78rem;
+  }
+  .objectives-box strong { color: var(--accent); display: block; margin-bottom: 3px; }
+  .objectives-box ul { margin: 0; padding-left: 15px; color: #e2e8f0; line-height: 1.4; }
+
+  .block-workspace {
+    background: #0b1120; border: 1px dashed var(--border); border-radius: 8px;
+    padding: 8px; display: flex; flex-direction: column; gap: 5px;
+  }
+  .block {
+    padding: 6px 8px; border-radius: 6px; font-size: 0.79rem; font-weight: 600;
+    display: flex; align-items: center; gap: 5px; flex-wrap: wrap; transition: outline 0.15s;
+  }
+  .block.active-block { outline: 2px solid #facc15; box-shadow: 0 0 12px rgba(250, 204, 21, 0.35); }
+  .b-var { background: #ea580c; }
+  .b-loop { background: #d97706; }
+  .b-if { background: #2563eb; margin-left: 10px; }
+  .b-action { background: #7c3aed; margin-left: 20px; }
+  .block input, .block select {
+    background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.3);
+    color: white; border-radius: 4px; padding: 2px 5px; font-weight: bold; width: 52px;
+  }
+  .block select { width: auto; }
+
+  .console-log {
+    flex: 1; min-height: 90px; background: #020617; border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px; font-family: monospace; font-size: 0.77rem; overflow-y: auto; line-height: 1.4; color: #cbd5e1;
+  }
+  .log-err { color: var(--red); }
+  .log-ok { color: var(--green); }
+  .log-info { color: var(--accent); }
+
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.78);
+    justify-content: center; align-items: center; z-index: 60; padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    max-width: 700px; width: 100%; max-height: 86vh; display: flex; flex-direction: column;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.55); overflow: hidden;
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 18px; background: #0b1120; border-bottom: 1px solid var(--border);
+  }
+  .modal-header h3 { margin: 0; font-size: 0.98rem; color: var(--accent); }
+  .modal-body { padding: 14px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 11px; }
+  .modal-footer {
+    padding: 11px 18px; background: #0b1120; border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 8px;
+  }
+
+  .step-item {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; display: flex; gap: 10px; align-items: flex-start;
+  }
+  .step-num {
+    background: var(--accent); color: #0f172a; font-weight: 800; font-size: 0.8rem;
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .step-content strong { display: block; font-size: 0.87rem; margin-bottom: 3px; color: #f8fafc; }
+  .step-content p { margin: 0; font-size: 0.81rem; color: var(--muted); line-height: 1.45; }
+
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+  .tab-btn.active { background: var(--accent); color: #0f172a; border-color: var(--accent); }
+  .note-card {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px;
+  }
+  .note-card h4 { margin: 0 0 5px 0; font-size: 0.89rem; color: #f8fafc; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .note-tag { font-size: 0.71rem; background: rgba(56, 189, 248, 0.15); color: var(--accent); padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+  .note-card p { margin: 0 0 6px 0; font-size: 0.81rem; color: #cbd5e1; line-height: 1.45; }
+  .note-meta { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 0.76rem; }
+  .note-spec { color: var(--amber); font-family: monospace; }
+  .wiki-link { color: #38bdf8; text-decoration: none; font-weight: 600; }
+  .wiki-link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-level">
+    <strong>NetBuilder v6</strong>
+    <select id="levelSelector" class="level-select" onchange="loadLevel(this.value)"></select>
+    <select id="layoutSelector" class="level-select" onchange="switchLayout(this.value)" title="Floorplan Layout"></select>
+  </div>
+  <div class="hud-stats">
+    <div class="stat-box">Cost: <span id="costDisplay" class="budget-ok">$0</span> / <span id="budgetCap">$0</span></div>
+    <div class="stat-box">Drills: <span id="drillDisplay">0</span></div>
+    <div class="stat-box">Roof Drops: <span id="roofDisplay">0</span></div>
+    <div class="stat-box">Topology: <span id="topoDisplay" style="color:var(--accent)">None</span></div>
+    <div class="stat-box">Packets: <span id="pktDisplay">0 / 0</span></div>
+  </div>
+</header>
+
+<main>
+  <section class="map-area">
+    <div class="toolbar">
+      <!-- Cabling Convention Toggle -->
+      <button id="modeWallBtn" class="route-btn active" onclick="setRouteConvention('wall')">🧱 Along Wall</button>
+      <button id="modeRoofBtn" class="route-btn" onclick="setRouteConvention('roof')">☁ Through Roof</button>
+
+      <div class="tool-sep"></div>
+
+      <!-- Cable Types -->
+      <button class="tool-btn active" data-tool="cat5e">Cat5e ($2/m)</button>
+      <button class="tool-btn" data-tool="cat6">Cat6 ($3/m)</button>
+      <button class="tool-btn" data-tool="cat6a">Cat6a ($6/m)</button>
+      <button class="tool-btn" data-tool="fibre">Fibre ($10/m)</button>
+
+      <div class="tool-sep"></div>
+
+      <!-- Network Devices -->
+      <button class="tool-btn" data-tool="switch4">4-Switch ($80)</button>
+      <button class="tool-btn" data-tool="switch8">8-Switch ($130)</button>
+      <button class="tool-btn" data-tool="router">Router ($160)</button>
+      <button class="tool-btn" data-tool="gateway">Gateway ($210)</button>
+      <button class="tool-btn" data-tool="ap">Wi-Fi AP ($110)</button>
+
+      <div class="tool-sep"></div>
+
+      <button class="notes-btn" onclick="openStudyNotesModal('topologies')">📚 Study Notes</button>
+      <button class="sol-btn" onclick="openSolutionModal()">💡 Show Solution</button>
+      <button class="reset-btn" onclick="resetCurrentLevel()">Clear</button>
+      <button class="sim-btn" onclick="startBuildSimulation()">🎬 Simulate Setup</button>
+      <button class="run-btn" onclick="runSimulation()">▶ Run Test</button>
+    </div>
+
+    <div class="review-bar">
+      <span id="phaseBadge" class="phase-pill">IDLE</span>
+      <span id="reviewCaption" class="review-caption">Toggle Along Wall vs. Through Roof, place Wi-Fi APs for Laptops &amp; IoT devices, or click "Simulate Setup".</span>
+      <div class="review-controls">
+        <button id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
+        <button onclick="stepBuildForward()">⏭ Step</button>
+        <button onclick="cycleSpeed()">⚡ <span id="speedLabel">1x</span></button>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="mapCanvas" width="760" height="456"></canvas>
+    </div>
+  </section>
+
+  <aside class="code-panel">
+    <h2>Mission &amp; DHCP Block Script</h2>
+    <div id="briefingBox" class="briefing"></div>
+    <div class="objectives-box">
+      <strong>Level Objectives</strong>
+      <ul id="objectivesList"></ul>
+    </div>
+
+    <div class="block-workspace">
+      <div id="blk-var" class="block b-var">
+        SET <code>host_id</code> TO <input type="number" id="blkStartId" value="10" min="2" max="240">
+      </div>
+      <div id="blk-loop" class="block b-loop">
+        FOR EACH <code>device</code> IN <code>network</code>
+      </div>
+      <div id="blk-if-printer" class="block b-if">
+        IF <code>device.type == "Printer"</code>
+      </div>
+      <div id="blk-printer" class="block b-action">
+        ASSIGN IP <code>192.168.1.</code><input type="number" id="blkPrinterId" value="50" min="2" max="254">
+      </div>
+      <div id="blk-if-iot" class="block b-if">
+        IF <code>device.type == "IoT"</code>
+      </div>
+      <div id="blk-iot" class="block b-action">
+        ASSIGN IP <code>192.168.1.</code><input type="number" id="blkIotId" value="80" min="2" max="254">
+      </div>
+      <div id="blk-else" class="block b-if">
+        ELSE (PCs &amp; Laptops)
+      </div>
+      <div id="blk-pc" class="block b-action">
+        ASSIGN IP <code>192.168.1.</code> + <code>host_id</code>
+      </div>
+      <div id="blk-inc" class="block b-action">
+        <select id="blkIncrement">
+          <option value="1">CHANGE host_id BY +1</option>
+          <option value="0">DO NOTHING (Keep same ID)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="console-log" id="consoleLog"></div>
+  </aside>
+</main>
+
+<!-- Solution Modal -->
+<div id="solutionModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="solutionTitle">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="solutionTitle">Working Solution Steps</h3>
+      <button onclick="closeSolutionModal()">✕ Close</button>
+    </div>
+    <div id="solutionStepsList" class="modal-body"></div>
+    <div class="modal-footer">
+      <button class="sol-btn" onclick="closeSolutionModal()">Got It — Let Me Build</button>
+    </div>
+  </div>
+</div>
+
+<!-- Study Notes Modal -->
+<div id="studyNotesModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="notesTitle">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="notesTitle">Networking Study Notes &amp; Wikipedia Reference Links</h3>
+      <button onclick="closeStudyNotesModal()">✕ Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="tabs">
+        <button id="tabTopologies" class="tab-btn active" onclick="switchNotesTab('topologies')">🕸 Topologies &amp; Cabling</button>
+        <button id="tabCables" class="tab-btn" onclick="switchNotesTab('cables')">🔌 Wired &amp; Wireless</button>
+        <button id="tabDevices" class="tab-btn" onclick="switchNotesTab('devices')">🖧 Devices &amp; IP/DHCP</button>
+      </div>
+      <div id="notesContent" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="notes-btn" onclick="closeStudyNotesModal()">Back to Floorplan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STUDY_NOTES = {
+  topologies: [
+    {
+      title: "Network Topologies (Star, Bus, Ring, Hybrid/Mesh)",
+      tag: "Topology Design",
+      body: "A Star topology connects devices to a central switch or hub; a Bus/Chain links devices in a line; a Ring forms a closed loop; and Hybrid/Mesh combines multiple patterns or redundant paths. Parallel lane offsets keep separate cables visible so you can spot each pattern.",
+      spec: "Trade-off: Cost vs. Redundancy & Port Count",
+      wikiTitle: "Network topology",
+      wikiUrl: "https://en.wikipedia.org/wiki/Network_topology"
+    },
+    {
+      title: "Along-Wall vs. Through-Roof Cabling Conventions",
+      tag: "Physical Routing",
+      body: "Routing Along Wall keeps cables organized along room perimeters and charges a wall-drill fee when crossing interior walls. Routing Through Roof runs overhead across ceiling space with a ceiling drop fee instead of wall drilling.",
+      spec: "Wall Drill Fee vs. Roof Ceiling Drop Fee",
+      wikiTitle: "Structured cabling",
+      wikiUrl: "https://en.wikipedia.org/wiki/Structured_cabling"
+    }
+  ],
+  cables: [
+    {
+      title: "Cat5e, Cat6 & Cat6a Copper Cables ($2/m, $3/m, $6/m)",
+      tag: "Twisted-Pair Copper",
+      body: "Twisted copper pairs cancel out electrical interference. Cat5e is budget-friendly for basic links, Cat6 improves crosstalk resistance, and Cat6a adds stronger shielding for higher-speed trunk links.",
+      spec: "Cost rises with shielding & speed: $2/m → $3/m → $6/m",
+      wikiTitle: "Twisted pair",
+      wikiUrl: "https://en.wikipedia.org/wiki/Twisted_pair"
+    },
+    {
+      title: "Fibre Optic Cabling ($10/m)",
+      tag: "Optical Fiber",
+      body: "Fibre optic cables transmit data using pulses of light inside thin glass or plastic strands. They do not suffer from electromagnetic interference and carry high-speed traffic efficiently.",
+      spec: "Highest packet speed ($10/m) | Immune to EMI",
+      wikiTitle: "Optical fiber",
+      wikiUrl: "https://en.wikipedia.org/wiki/Optical_fiber"
+    },
+    {
+      title: "Wireless Access Points (AP), Laptops & IoT Devices",
+      tag: "Wireless LAN",
+      body: "A Wireless Access Point (AP) plugs into the wired network and broadcasts a Wi-Fi coverage zone so Laptops and IoT devices (sensors, badge readers, smart cameras) can join without running cables to every device.",
+      spec: "AP Coverage Radius: 4.5 grid cells | Requires wired uplink",
+      wikiTitle: "Wireless access point",
+      wikiUrl: "https://en.wikipedia.org/wiki/Wireless_access_point"
+    }
+  ],
+  devices: [
+    {
+      title: "4-Switch ($80) & 8-Switch ($130)",
+      tag: "LAN Switching",
+      body: "Switches connect multiple wired devices on a local network and forward packets directly to the target port. An 8-Switch supports more devices than a 4-Switch.",
+      spec: "4 Ports ($80) or 8 Ports ($130)",
+      wikiTitle: "Network switch",
+      wikiUrl: "https://en.wikipedia.org/wiki/Network_switch"
+    },
+    {
+      title: "Router ($160) & Gateway ($210)",
+      tag: "Routing & Gateways",
+      body: "Routers forward packets between networks/subnets using IP addresses, while Gateways act as boundary nodes linking local office segments toward core or external networks.",
+      spec: "Router ($160) | Gateway ($210)",
+      wikiTitle: "Router (computing)",
+      wikiUrl: "https://en.wikipedia.org/wiki/Router_(computing)"
+    },
+    {
+      title: "IPv4 Addresses & DHCP Assignment Logic",
+      tag: "Addressing",
+      body: "Every active endpoint (PC, Printer, Laptop, IoT) needs a unique IPv4 address such as 192.168.1.10. Assigning the same IP to two devices causes an IP Conflict and blocks clean delivery.",
+      spec: "Unique IPv4 required per device",
+      wikiTitle: "Dynamic Host Configuration Protocol",
+      wikiUrl: "https://en.wikipedia.org/wiki/Dynamic_Host_Configuration_Protocol"
+    }
+  ]
+};
+
+const LEVELS_DATA = [
+  {
+    levelId: 1,
+    title: "Level 1: Office Star & Wall vs. Roof",
+    briefing: "Connect PC-01, PC-02, and the Printer to the Server using a 4-Switch. Compare Along-Wall vs. Through-Roof cabling within a $420 budget.",
+    objectives: [
+      "Deliver 100% of packets from PC-01, PC-02, and Printer to the Server.",
+      "Assign unique IPv4 addresses on 192.168.1.x with zero conflicts.",
+      "Keep total cost at or below $420."
+    ],
+    grid: { cols: 20, rows: 12, metersPerCell: 2 },
+    economics: {
+      budget: 420,
+      wallDrillCost: 50,
+      roofDropCost: 25,
+      deviceCosts: { switch4: 80, switch8: 130, router: 160, gateway: 210, ap: 110 },
+      cables: {
+        cat5e: { costPerMeter: 2, speed: 0.011, color: "#94a3b8" },
+        cat6:  { costPerMeter: 3, speed: 0.015, color: "#38bdf8" },
+        cat6a: { costPerMeter: 6, speed: 0.024, color: "#2dd4bf" },
+        fibre: { costPerMeter: 10, speed: 0.036, color: "#f59e0b" }
+      }
+    },
+    layouts: [
+      {
+        id: "layout_a",
+        name: "Layout A: Standard Studio",
+        rooms: [{ name: "Main Studio", x: 1, y: 1, w: 18, h: 10 }],
+        walls: [],
+        initialNodes: [
+          { id: "srv_1", type: "server",  label: "Server",  x: 16, y: 6, ip: "192.168.1.1", ports: 4 },
+          { id: "pc_1",  type: "pc",      label: "PC-01",   x: 4,  y: 4, ip: null, ports: 2 },
+          { id: "pc_2",  type: "pc",      label: "PC-02",   x: 4,  y: 8, ip: null, ports: 2 },
+          { id: "prn_1", type: "printer", label: "Printer", x: 10, y: 9, ip: null, ports: 2 }
+        ]
+      },
+      {
+        id: "layout_b",
+        name: "Layout B: Divided Wing",
+        rooms: [
+          { name: "Workroom",    x: 1,  y: 1, w: 10, h: 10 },
+          { name: "Server Room", x: 11, y: 1, w: 8,  h: 10 }
+        ],
+        walls: [{ x1: 11, y1: 1, x2: 11, y2: 11 }],
+        initialNodes: [
+          { id: "srv_1", type: "server",  label: "Server",  x: 16, y: 6, ip: "192.168.1.1", ports: 4 },
+          { id: "pc_1",  type: "pc",      label: "PC-01",   x: 4,  y: 3, ip: null, ports: 2 },
+          { id: "pc_2",  type: "pc",      label: "PC-02",   x: 4,  y: 8, ip: null, ports: 2 },
+          { id: "prn_1", type: "printer", label: "Printer", x: 8,  y: 8, ip: null, ports: 2 }
+        ]
+      }
+    ],
+    starterBlocks: { startId: 10, printerId: 50, iotId: 80, inc: 1 },
+    demoPlan: {
+      routeMode: "wall",
+      devices: [{ id: "dev_l1_sw4", type: "switch4", label: "4-Switch", x: 11, y: 6, ports: 4 }],
+      links: [
+        { from: "pc_1",       to: "dev_l1_sw4", type: "cat5e" },
+        { from: "pc_2",       to: "dev_l1_sw4", type: "cat5e" },
+        { from: "prn_1",      to: "dev_l1_sw4", type: "cat5e" },
+        { from: "dev_l1_sw4", to: "srv_1",      type: "cat6" }
+      ]
+    },
+    solutionSteps: [
+      { title: "Place a 4-Switch ($80) at (11, 6)", detail: "Select '4-Switch ($80)' and click tile (11, 6)." },
+      { title: "Wire PC-01, PC-02, and Printer to the 4-Switch", detail: "Use Cat5e ($2/m) to link each device to (11, 6)." },
+      { title: "Link 4-Switch to Server and run test", detail: "Connect (11, 6) to Server at (16, 6) using Cat6 ($3/m) and click '▶ Run Test'." }
+    ]
+  },
+  {
+    levelId: 2,
+    title: "Level 2: Wireless AP, Laptop & IoT Zone",
+    briefing: "Deploy a Wi-Fi AP so the wireless Laptop and IoT Sensor can reach the Server alongside PC-01 and the Printer within $700.",
+    objectives: [
+      "Place a Wi-Fi AP ($110) within range of both Laptop and IoT Sensor.",
+      "Ensure Laptop and IoT Sensor receive unique IPv4 addresses without conflicts.",
+      "Deliver all 4 endpoint packets within the $700 budget."
+    ],
+    grid: { cols: 20, rows: 12, metersPerCell: 2 },
+    economics: {
+      budget: 700,
+      wallDrillCost: 50,
+      roofDropCost: 25,
+      deviceCosts: { switch4: 80, switch8: 130, router: 160, gateway: 210, ap: 110 },
+      cables: {
+        cat5e: { costPerMeter: 2, speed: 0.011, color: "#94a3b8" },
+        cat6:  { costPerMeter: 3, speed: 0.015, color: "#38bdf8" },
+        cat6a: { costPerMeter: 6, speed: 0.024, color: "#2dd4bf" },
+        fibre: { costPerMeter: 10, speed: 0.036, color: "#f59e0b" }
+      }
+    },
+    layouts: [
+      {
+        id: "layout_a",
+        name: "Layout A: Smart Lounge",
+        rooms: [
+          { name: "Smart Lounge", x: 1,  y: 1, w: 12, h: 10 },
+          { name: "Server Bay",   x: 13, y: 1, w: 6,  h: 10 }
+        ],
+        walls: [{ x1: 13, y1: 1, x2: 13, y2: 11 }],
+        initialNodes: [
+          { id: "srv_1", type: "server",  label: "Server",  x: 16, y: 6, ip: "192.168.1.1", ports: 4 },
+          { id: "pc_1",  type: "pc",      label: "PC-01",   x: 3,  y: 3, ip: null, ports: 2 },
+          { id: "prn_1", type: "printer", label: "Printer", x: 3,  y: 9, ip: null, ports: 2 },
+          { id: "lap_1", type: "laptop",  label: "Laptop",  x: 8,  y: 3, ip: null, wireless: true },
+          { id: "iot_1", type: "iot",     label: "IoT-Cam", x: 9,  y: 8, ip: null, wireless: true }
+        ]
+      },
+      {
+        id: "layout_b",
+        name: "Layout B: Split Office",
+        rooms: [
+          { name: "Desk Area",    x: 1,  y: 1, w: 7,  h: 10 },
+          { name: "Wi-Fi Zone",   x: 8,  y: 1, w: 5,  h: 10 },
+          { name: "Server Bay",   x: 13, y: 1, w: 6,  h: 10 }
+        ],
+        walls: [
+          { x1: 8,  y1: 1, x2: 8,  y2: 11 },
+          { x1: 13, y1: 1, x2: 13, y2: 11 }
+        ],
+        initialNodes: [
+          { id: "srv_1", type: "server",  label: "Server",  x: 16, y: 6, ip: "192.168.1.1", ports: 4 },
+          { id: "pc_1",  type: "pc",      label: "PC-01",   x: 3,  y: 3, ip: null, ports: 2 },
+          { id: "prn_1", type: "printer", label: "Printer", x: 3,  y: 9, ip: null, ports: 2 },
+          { id: "lap_1", type: "laptop",  label: "Laptop",  x: 9,  y: 4, ip: null, wireless: true },
+          { id: "iot_1", type: "iot",     label: "IoT-Cam", x: 10, y: 8, ip: null, wireless: true }
+        ]
+      }
+    ],
+    starterBlocks: { startId: 10, printerId: 50, iotId: 80, inc: 1 },
+    demoPlan: {
+      routeMode: "roof",
+      devices: [
+        { id: "dev_l2_sw4", type: "switch4", label: "4-Switch", x: 11, y: 6, ports: 4 },
+        { id: "dev_l2_ap",  type: "ap",      label: "Wi-Fi AP", x: 9,  y: 6, ports: 2 }
+      ],
+      links: [
+        { from: "pc_1",       to: "dev_l2_sw4", type: "cat6" },
+        { from: "prn_1",      to: "dev_l2_sw4", type: "cat5e" },
+        { from: "dev_l2_ap",  to: "dev_l2_sw4", type: "cat6" },
+        { from: "dev_l2_sw4", to: "srv_1",      type: "fibre" }
+      ]
+    },
+    solutionSteps: [
+      { title: "Place a Wi-Fi AP ($110) at (9, 6) and a 4-Switch ($80) at (11, 6)", detail: "At (9, 6), the AP covers both Laptop and IoT-Cam within its 4.5-cell radius." },
+      { title: "Connect PC-01, Printer, and Wi-Fi AP to the 4-Switch", detail: "Link PC-01, Printer, and Wi-Fi AP to the 4-Switch at (11, 6)." },
+      { title: "Connect 4-Switch to Server via Fibre ($10/m)", detail: "Link (11, 6) to Server at (16, 6) using Fibre and run the test." }
+    ]
+  },
+  {
+    levelId: 3,
+    title: "Level 3: Router, Gateway & High-Density Wing",
+    briefing: "Bridge devices through a Router and Gateway using Cat6a/Fibre and an 8-Switch for high-capacity traffic within $1,350.",
+    objectives: [
+      "Include an 8-Switch ($130), a Router ($160), and a Gateway ($210).",
+      "Use Cat6a ($6/m) or Fibre ($10/m) along the uplink path to the Server.",
+      "Deliver all 5 endpoint packets within the $1,350 budget."
+    ],
+    grid: { cols: 20, rows: 12, metersPerCell: 2 },
+    economics: {
+      budget: 1350,
+      wallDrillCost: 50,
+      roofDropCost: 25,
+      deviceCosts: { switch4: 80, switch8: 130, router: 160, gateway: 210, ap: 110 },
+      cables: {
+        cat5e: { costPerMeter: 2, speed: 0.011, color: "#94a3b8" },
+        cat6:  { costPerMeter: 3, speed: 0.015, color: "#38bdf8" },
+        cat6a: { costPerMeter: 6, speed: 0.024, color: "#2dd4bf" },
+        fibre: { costPerMeter: 10, speed: 0.036, color: "#f59e0b" }
+      }
+    },
+    layouts: [
+      {
+        id: "layout_a",
+        name: "Layout A: Enterprise Wing",
+        rooms: [
+          { name: "Office Wing", x: 1,  y: 1, w: 9, h: 10 },
+          { name: "Core Hall",   x: 10, y: 1, w: 9, h: 10 }
+        ],
+        walls: [{ x1: 10, y1: 1, x2: 10, y2: 11 }],
+        initialNodes: [
+          { id: "srv_1", type: "server",  label: "Server",  x: 16, y: 6, ip: "192.168.1.1", ports: 4 },
+          { id: "pc_1",  type: "pc",      label: "PC-01",   x: 3,  y: 3, ip: null, ports: 2 },
+          { id: "pc_2",  type: "pc",      label: "PC-02",   x: 7,  y: 3, ip: null, ports: 2 },
+          { id: "prn_1", type: "printer", label: "Printer", x: 3,  y: 9, ip: null, ports: 2 },
+          { id: "lap_1", type: "laptop",  label: "Laptop",  x: 7,  y: 7, ip: null, wireless: true },
+          { id: "iot_1", type: "iot",     label: "IoT-Hub", x: 7,  y: 9, ip: null, wireless: true }
+        ]
+      }
+    ],
+    starterBlocks: { startId: 10, printerId: 50, iotId: 80, inc: 1 },
+    demoPlan: {
+      routeMode: "roof",
+      devices: [
+        { id: "dev_l3_sw8", type: "switch8", label: "8-Switch", x: 8,  y: 6, ports: 8 },
+        { id: "dev_l3_ap",  type: "ap",      label: "Wi-Fi AP", x: 6,  y: 8, ports: 2 },
+        { id: "dev_l3_rtr", type: "router",  label: "Router",   x: 11, y: 6, ports: 4 },
+        { id: "dev_l3_gw",  type: "gateway", label: "Gateway",  x: 13, y: 6, ports: 4 }
+      ],
+      links: [
+        { from: "pc_1",       to: "dev_l3_sw8", type: "cat6" },
+        { from: "pc_2",       to: "dev_l3_sw8", type: "cat6" },
+        { from: "prn_1",      to: "dev_l3_sw8", type: "cat5e" },
+        { from: "dev_l3_ap",  to: "dev_l3_sw8", type: "cat6" },
+        { from: "dev_l3_sw8", to: "dev_l3_rtr", type: "cat6a" },
+        { from: "dev_l3_rtr", to: "dev_l3_gw",  type: "cat6a" },
+        { from: "dev_l3_gw",  to: "srv_1",      type: "fibre" }
+      ]
+    },
+    solutionSteps: [
+      { title: "Place 8-Switch at (8, 6), Wi-Fi AP at (6, 8), Router at (11, 6), and Gateway at (13, 6)", detail: "The Wi-Fi AP at (6, 8) covers both Laptop and IoT-Hub." },
+      { title: "Connect PC-01, PC-02, Printer, and Wi-Fi AP to the 8-Switch", detail: "Use Cat6/Cat5e to connect local devices to the 8-Switch at (8, 6)." },
+      { title: "Connect 8-Switch → Router → Gateway → Server with Cat6a & Fibre", detail: "Use Cat6a ($6/m) between 8-Switch, Router, and Gateway, then Fibre ($10/m) to Server (16, 6)." }
+    ]
+  }
+];
+
+const CELL = 38;
+const WIFI_RADIUS_CELLS = 4.5;
+const SPEEDS = [1, 2, 0.5];
+let speedIdx = 0;
+let isPaused = false;
+
+let currentLevel = LEVELS_DATA[0];
+let currentLayout = currentLevel.layouts[0];
+let routeConvention = 'wall'; // 'wall' | 'roof'
+let nodes = [];
+let cables = [];
+let packets = [];
+let activeTool = 'cat5e';
+let selectedNode = null;
+let animFrame = null;
+
+let simTimeline = [];
+let simStepIdx = 0;
+let simStepElapsed = 0;
+let simMode = 'none';
+let highlightNodeId = null;
+let pulseRing = null;
+let lastTs = 0;
+
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
+
+const levelSelector = document.getElementById('levelSelector');
+LEVELS_DATA.forEach(lvl => {
+  const opt = document.createElement('option');
+  opt.value = lvl.levelId;
+  opt.textContent = lvl.title;
+  levelSelector.appendChild(opt);
+});
+
+function populateLayoutSelector() {
+  const lSel = document.getElementById('layoutSelector');
+  lSel.innerHTML = '';
+  currentLevel.layouts.forEach(lay => {
+    const opt = document.createElement('option');
+    opt.value = lay.id;
+    opt.textContent = lay.name;
+    lSel.appendChild(opt);
+  });
+  lSel.value = currentLayout.id;
+}
+
+function setRouteConvention(mode) {
+  routeConvention = mode;
+  document.getElementById('modeWallBtn').classList.toggle('active', mode === 'wall');
+  document.getElementById('modeRoofBtn').classList.toggle('active', mode === 'roof');
+  logMsg(`Cabling convention set to ${mode === 'wall' ? 'Along Wall (wall drill fees)' : 'Through Roof (ceiling drop fees)'}.`, 'log-info');
+}
+
+function loadLevel(levelId) {
+  currentLevel = LEVELS_DATA.find(l => l.levelId === Number(levelId)) || LEVELS_DATA[0];
+  currentLayout = currentLevel.layouts[0];
+  levelSelector.value = currentLevel.levelId;
+  populateLayoutSelector();
+  applyLevelMetadata();
+  resetCurrentLevel();
+}
+
+function switchLayout(layoutId) {
+  currentLayout = currentLevel.layouts.find(l => l.id === layoutId) || currentLevel.layouts[0];
+  resetCurrentLevel();
+}
+
+function applyLevelMetadata() {
+  document.getElementById('briefingBox').textContent = currentLevel.briefing;
+  document.getElementById('budgetCap').textContent = `$${currentLevel.economics.budget}`;
+  document.getElementById('blkStartId').value = currentLevel.starterBlocks.startId;
+  document.getElementById('blkPrinterId').value = currentLevel.starterBlocks.printerId;
+  document.getElementById('blkIotId').value = currentLevel.starterBlocks.iotId;
+  document.getElementById('blkIncrement').value = String(currentLevel.starterBlocks.inc);
+
+  const objList = document.getElementById('objectivesList');
+  objList.innerHTML = '';
+  currentLevel.objectives.forEach(obj => {
+    const li = document.createElement('li');
+    li.textContent = obj;
+    objList.appendChild(li);
+  });
+}
+
+function openSolutionModal() {
+  document.getElementById('solutionTitle').textContent = `${currentLevel.title} — Working Solution Steps`;
+  const list = document.getElementById('solutionStepsList');
+  list.innerHTML = '';
+  currentLevel.solutionSteps.forEach((step, idx) => {
+    const row = document.createElement('div');
+    row.className = 'step-item';
+    row.innerHTML = `
+      <div class="step-num">${idx + 1}</div>
+      <div class="step-content">
+        <strong>${step.title}</strong>
+        <p>${step.detail}</p>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+  document.getElementById('solutionModal').classList.add('open');
+}
+
+function closeSolutionModal() {
+  document.getElementById('solutionModal').classList.remove('open');
+}
+
+function openStudyNotesModal(tab = 'topologies') {
+  switchNotesTab(tab);
+  document.getElementById('studyNotesModal').classList.add('open');
+}
+
+function closeStudyNotesModal() {
+  document.getElementById('studyNotesModal').classList.remove('open');
+}
+
+function switchNotesTab(tab) {
+  document.getElementById('tabTopologies').classList.toggle('active', tab === 'topologies');
+  document.getElementById('tabCables').classList.toggle('active', tab === 'cables');
+  document.getElementById('tabDevices').classList.toggle('active', tab === 'devices');
+  const container = document.getElementById('notesContent');
+  container.innerHTML = '';
+  STUDY_NOTES[tab].forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'note-card';
+    card.innerHTML = `
+      <h4>${item.title} <span class="note-tag">${item.tag}</span></h4>
+      <p>${item.body}</p>
+      <div class="note-meta">
+        <span class="note-spec">${item.spec}</span>
+        <a class="wiki-link" href="${item.wikiUrl}" target="_blank" rel="noopener noreferrer">Wikipedia: ${item.wikiTitle} ↗</a>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function resetCurrentLevel() {
+  cancelAnimationFrame(animFrame);
+  simMode = 'none';
+  simTimeline = [];
+  simStepIdx = 0;
+  simStepElapsed = 0;
+  isPaused = false;
+  highlightNodeId = null;
+  pulseRing = null;
+  clearBlockHighlights();
+  document.getElementById('pauseBtn').textContent = '⏸ Pause';
+
+  nodes = JSON.parse(JSON.stringify(currentLayout.initialNodes));
+  cables = [];
+  packets = [];
+  selectedNode = null;
+  const endpointsCount = getActiveEndpoints().length;
+  document.getElementById('pktDisplay').textContent = `0 / ${endpointsCount}`;
+  document.getElementById('topoDisplay').textContent = 'None';
+  document.getElementById('consoleLog').innerHTML = `<div class="log-info">&gt; Loaded ${currentLevel.title} (${currentLayout.name}).</div>`;
+  setPhaseBanner('IDLE', 'Toggle Along Wall vs. Through Roof, place Wi-Fi APs for Laptops & IoT devices, or click "Simulate Setup".');
+  updateEconomics();
+  draw();
+}
+
+function getActiveEndpoints() {
+  return nodes.filter(n => ['pc', 'printer', 'laptop', 'iot'].includes(n.type));
+}
+
+function togglePause() {
+  if (simMode === 'none') return;
+  isPaused = !isPaused;
+  document.getElementById('pauseBtn').textContent = isPaused ? '▶ Resume' : '⏸ Pause';
+  if (!isPaused) {
+    lastTs = performance.now();
+    tickLoop(lastTs);
+  }
+}
+
+function cycleSpeed() {
+  speedIdx = (speedIdx + 1) % SPEEDS.length;
+  document.getElementById('speedLabel').textContent = `${SPEEDS[speedIdx]}x`;
+}
+
+function stepBuildForward() {
+  if (simMode !== 'build' || simStepIdx >= simTimeline.length) return;
+  isPaused = true;
+  document.getElementById('pauseBtn').textContent = '▶ Resume';
+  applyTimelineStep(simTimeline[simStepIdx], 1);
+  simStepIdx++;
+  simStepElapsed = 0;
+  if (simStepIdx >= simTimeline.length) {
+    finishBuildAndLaunchPackets();
+  }
+  draw();
+}
+
+document.querySelectorAll('.tool-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTool = btn.dataset.tool;
+    selectedNode = null;
+    draw();
+  });
+});
+
+function logMsg(text, cls = '') {
+  const log = document.getElementById('consoleLog');
+  log.innerHTML += `<div class="${cls}">&gt; ${text}</div>`;
+  log.scrollTop = log.scrollHeight;
+}
+
+function setPhaseBanner(badge, caption) {
+  document.getElementById('phaseBadge').textContent = badge;
+  document.getElementById('reviewCaption').textContent = caption;
+}
+
+function clearBlockHighlights() {
+  document.querySelectorAll('.block').forEach(b => b.classList.remove('active-block'));
+}
+
+function highlightBlock(id) {
+  clearBlockHighlights();
+  if (id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active-block');
+  }
+}
+
+function isDeviceTool(tool) {
+  return ['switch4', 'switch8', 'router', 'gateway', 'ap'].includes(tool);
+}
+
+function getDeviceMeta(type) {
+  const map = {
+    switch4: { label: '4-Switch', ports: 4, color: '#a855f7' },
+    switch8: { label: '8-Switch', ports: 8, color: '#c084fc' },
+    router:  { label: 'Router',   ports: 4, color: '#f97316' },
+    gateway: { label: 'Gateway',  ports: 4, color: '#ec4899' },
+    ap:      { label: 'Wi-Fi AP', ports: 2, color: '#06b6d4' }
+  };
+  return map[type] || { label: 'Device', ports: 4, color: '#a855f7' };
+}
+
+function getRoomAt(gx, gy) {
+  return currentLayout.rooms.find(r =>
+    gx >= r.x && gx < r.x + r.w && gy >= r.y && gy < r.y + r.h
+  ) || null;
+}
+
+function buildPath(a, b, mode) {
+  if (mode === 'roof') {
+    // Direct overhead ceiling run with an elbow
+    const pts = [{ x: a.x, y: a.y }, { x: b.x, y: a.y }, { x: b.x, y: b.y }];
+    const clean = [];
+    for (const p of pts) {
+      const prev = clean[clean.length - 1];
+      if (!prev || prev.x !== p.x || prev.y !== p.y) clean.push(p);
+    }
+    return clean;
+  }
+
+  // Along-wall perimeter routing
+  const roomA = getRoomAt(a.x, a.y);
+  const roomB = getRoomAt(b.x, b.y);
+  const pts = [{ x: a.x, y: a.y }];
+
+  if (roomA) {
+    const edgeY = Math.abs(a.y - roomA.y) <= Math.abs((roomA.y + roomA.h - 1) - a.y)
+      ? roomA.y
+      : roomA.y + roomA.h - 1;
+    pts.push({ x: a.x, y: edgeY });
+    pts.push({ x: b.x, y: edgeY });
+  } else {
+    pts.push({ x: b.x, y: a.y });
+  }
+
+  if (roomB) {
+    const last = pts[pts.length - 1];
+    const edgeX = Math.abs(b.x - roomB.x) <= Math.abs((roomB.x + roomB.w - 1) - b.x)
+      ? roomB.x
+      : roomB.x + roomB.w - 1;
+    pts.push({ x: edgeX, y: last.y });
+    pts.push({ x: edgeX, y: b.y });
+  }
+
+  pts.push({ x: b.x, y: b.y });
+
+  const clean = [];
+  for (const p of pts) {
+    const prev = clean[clean.length - 1];
+    if (!prev || prev.x !== p.x || prev.y !== p.y) clean.push(p);
+  }
+  return clean;
+}
+
+function measurePath(pathPts, mode) {
+  let cells = 0;
+  let drills = 0;
+  for (let i = 0; i < pathPts.length - 1; i++) {
+    const p1 = pathPts[i];
+    const p2 = pathPts[i + 1];
+    cells += Math.abs(p2.x - p1.x) + Math.abs(p2.y - p1.y);
+
+    if (mode === 'wall') {
+      for (const w of currentLayout.walls) {
+        if (w.x1 === w.x2 && p1.y === p2.y) {
+          const minX = Math.min(p1.x, p2.x), maxX = Math.max(p1.x, p2.x);
+          if (minX < w.x1 && maxX >= w.x1 && p1.y >= w.y1 && p1.y < w.y2) drills++;
+        } else if (w.y1 === w.y2 && p1.x === p2.x) {
+          const minY = Math.min(p1.y, p2.y), maxY = Math.max(p1.y, p2.y);
+          if (minY < w.y1 && maxY >= w.y1 && p1.x >= w.x1 && p1.x < w.x2) drills++;
+        }
+      }
+    }
+  }
+  const roofDrops = mode === 'roof' ? 2 : 0;
+  return { meters: cells * currentLevel.grid.metersPerCell, drills, roofDrops };
+}
+
+function computeCableOffsets() {
+  const edgeUsage = new Map();
+  const cableLanes = cables.map(() => []);
+
+  cables.forEach((c, cIdx) => {
+    for (let i = 0; i < c.path.length - 1; i++) {
+      const p1 = c.path[i], p2 = c.path[i + 1];
+      const k1 = `${p1.x},${p1.y}->${p2.x},${p2.y}`;
+      const k2 = `${p2.x},${p2.y}->${p1.x},${p1.y}`;
+      const key = `${c.mode}:${k1 < k2 ? k1 : k2}`;
+      const count = edgeUsage.get(key) || 0;
+      edgeUsage.set(key, count + 1);
+      cableLanes[cIdx].push({ segIdx: i, lane: count });
+    }
+  });
+
+  cables.forEach((c, cIdx) => {
+    c.segOffsets = cableLanes[cIdx].map(({ segIdx, lane }) => {
+      const p1 = c.path[segIdx], p2 = c.path[segIdx + 1];
+      const k1 = `${p1.x},${p1.y}->${p2.x},${p2.y}`;
+      const k2 = `${p2.x},${p2.y}->${p1.x},${p1.y}`;
+      const key = `${c.mode}:${k1 < k2 ? k1 : k2}`;
+      const total = edgeUsage.get(key) || 1;
+      const centered = lane - (total - 1) / 2;
+      return centered * 6;
+    });
+  });
+}
+
+function detectTopology() {
+  if (cables.length === 0) return 'None';
+  const degree = new Map();
+  cables.forEach(c => {
+    degree.set(c.from, (degree.get(c.from) || 0) + 1);
+    degree.set(c.to, (degree.get(c.to) || 0) + 1);
+  });
+  const degs = [...degree.values()];
+  const maxDeg = Math.max(...degs);
+  const hasHub = nodes.some(n => isDeviceTool(n.type) || n.type === 'server');
+  const allClosedLoop = degs.length >= 3 && degs.every(d => d === 2);
+
+  if (allClosedLoop) return 'Ring';
+  if (hasHub && maxDeg >= 3) return cables.length > nodes.length - 1 ? 'Hybrid / Star+' : 'Star';
+  if (maxDeg <= 2 && cables.length >= 2) return 'Bus / Chain';
+  return 'Hybrid / Mesh';
+}
+
+function updateEconomics() {
+  let totalCost = 0;
+  let totalDrills = 0;
+  let totalRoofDrops = 0;
+
+  nodes.forEach(n => {
+    if (isDeviceTool(n.type)) {
+      totalCost += currentLevel.economics.deviceCosts[n.type] || 80;
+    }
+  });
+  cables.forEach(c => {
+    totalCost += c.meters * currentLevel.economics.cables[c.type].costPerMeter;
+    totalCost += (c.drills || 0) * currentLevel.economics.wallDrillCost;
+    totalCost += (c.roofDrops || 0) * currentLevel.economics.roofDropCost;
+    totalDrills += c.drills || 0;
+    totalRoofDrops += c.roofDrops || 0;
+  });
+
+  const costEl = document.getElementById('costDisplay');
+  costEl.textContent = `$${totalCost}`;
+  costEl.className = totalCost <= currentLevel.economics.budget ? 'budget-ok' : 'budget-over';
+  document.getElementById('drillDisplay').textContent = totalDrills;
+  document.getElementById('roofDisplay').textContent = totalRoofDrops;
+  document.getElementById('topoDisplay').textContent = detectTopology();
+  return totalCost;
+}
+
+canvas.addEventListener('click', (e) => {
+  if (simMode !== 'none') return;
+  const rect = canvas.getBoundingClientRect();
+  const gx = Math.floor((e.clientX - rect.left) / CELL);
+  const gy = Math.floor((e.clientY - rect.top) / CELL);
+  const clickedNode = nodes.find(n => n.x === gx && n.y === gy);
+
+  if (isDeviceTool(activeTool)) {
+    if (!clickedNode && gx >= 1 && gx < 19 && gy >= 1 && gy < 11) {
+      const meta = getDeviceMeta(activeTool);
+      const devCost = currentLevel.economics.deviceCosts[activeTool];
+      nodes.push({
+        id: 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5),
+        type: activeTool, label: meta.label,
+        x: gx, y: gy, ip: null, ports: meta.ports
+      });
+      pulseRing = { x: gx, y: gy, color: meta.color };
+      logMsg(`Placed ${meta.label} at (${gx}, ${gy}) [-$${devCost}]`);
+      updateEconomics();
+      draw();
+    }
+    return;
+  }
+
+  if (clickedNode) {
+    if (!selectedNode) {
+      selectedNode = clickedNode;
+    } else if (selectedNode.id !== clickedNode.id) {
+      const usedA = cables.filter(c => c.from === selectedNode.id || c.to === selectedNode.id).length;
+      const usedB = cables.filter(c => c.from === clickedNode.id || c.to === clickedNode.id).length;
+
+      if (usedA >= selectedNode.ports || usedB >= clickedNode.ports) {
+        logMsg(`Port limit reached on ${usedA >= selectedNode.ports ? selectedNode.label : clickedNode.label}!`, 'log-err');
+      } else {
+        const path = buildPath(selectedNode, clickedNode, routeConvention);
+        const { meters, drills, roofDrops } = measurePath(path, routeConvention);
+        cables.push({
+          from: selectedNode.id, to: clickedNode.id,
+          type: activeTool, mode: routeConvention,
+          meters, drills, roofDrops, path, segOffsets: [], drawProgress: 1
+        });
+        computeCableOffsets();
+        const extraNote = routeConvention === 'wall' ? `${drills} drill` : `${roofDrops} roof drops`;
+        logMsg(`Wired ${selectedNode.label} ↔ ${clickedNode.label}: ${meters}m ${activeTool} [${routeConvention}] (${extraNote})`);
+        updateEconomics();
+      }
+      selectedNode = null;
+    }
+    draw();
+  }
+});
+
+function startBuildSimulation() {
+  cancelAnimationFrame(animFrame);
+  nodes = JSON.parse(JSON.stringify(currentLayout.initialNodes));
+  cables = [];
+  packets = [];
+  selectedNode = null;
+  isPaused = false;
+  document.getElementById('pauseBtn').textContent = '⏸ Pause';
+  document.getElementById('consoleLog').innerHTML = `<div class="log-info">&gt; Starting timed setup simulation (${currentLevel.title})...</div>`;
+
+  simTimeline = [];
+  const mode = currentLevel.demoPlan.routeMode || 'wall';
+
+  currentLevel.demoPlan.devices.forEach(dev => {
+    const cost = currentLevel.economics.deviceCosts[dev.type];
+    simTimeline.push({
+      kind: 'place_device',
+      duration: 800,
+      devData: dev,
+      badge: 'PHASE 1: HARDWARE',
+      caption: `Installing ${dev.label} at (${dev.x}, ${dev.y}) for $${cost}...`
+    });
+  });
+
+  currentLevel.demoPlan.links.forEach(lk => {
+    simTimeline.push({
+      kind: 'pull_cable',
+      duration: 850,
+      linkData: lk,
+      routeMode: mode,
+      badge: 'PHASE 2: CABLING',
+      caption: `Pulling ${lk.type.toUpperCase()} (${mode === 'wall' ? 'Along Wall' : 'Through Roof'}) from ${lk.from} to ${lk.to}...`
+    });
+  });
+
+  let simHostId = parseInt(document.getElementById('blkStartId').value, 10);
+  const printerStatic = parseInt(document.getElementById('blkPrinterId').value, 10);
+  const iotStatic = parseInt(document.getElementById('blkIotId').value, 10);
+  const inc = parseInt(document.getElementById('blkIncrement').value, 10);
+  const endpoints = getActiveEndpoints();
+
+  simTimeline.push({
+    kind: 'dhcp_init',
+    duration: 550,
+    blockId: 'blk-var',
+    badge: 'PHASE 3: DHCP SCRIPT',
+    caption: `Initializing host_id = ${simHostId}.`
+  });
+
+  endpoints.forEach(ep => {
+    let assignedIp;
+    let blockId = 'blk-pc';
+    let note = `host_id = ${simHostId}`;
+    if (ep.type === 'printer') {
+      assignedIp = `192.168.1.${printerStatic}`;
+      blockId = 'blk-printer';
+      note = 'Static Printer IP';
+    } else if (ep.type === 'iot') {
+      assignedIp = `192.168.1.${iotStatic}`;
+      blockId = 'blk-iot';
+      note = 'Static IoT IP';
+    } else {
+      assignedIp = `192.168.1.${simHostId}`;
+      if (inc !== 0) simHostId += inc;
+    }
+
+    simTimeline.push({
+      kind: 'assign_ip',
+      duration: 750,
+      nodeId: ep.id,
+      ip: assignedIp,
+      blockId,
+      badge: 'PHASE 3: DHCP SCRIPT',
+      caption: `Assigning ${assignedIp} to ${ep.label} (${note}).`
+    });
+  });
+
+  simStepIdx = 0;
+  simStepElapsed = 0;
+  simMode = 'build';
+  updateEconomics();
+  lastTs = performance.now();
+  tickLoop(lastTs);
+}
+
+function applyTimelineStep(step, t) {
+  setPhaseBanner(step.badge, step.caption);
+  highlightBlock(step.blockId || null);
+  highlightNodeId = null;
+
+  if (step.kind === 'place_device') {
+    const meta = getDeviceMeta(step.devData.type);
+    const exists = nodes.some(n => n.id === step.devData.id);
+    if (!exists) {
+      nodes.push({
+        id: step.devData.id, type: step.devData.type, label: step.devData.label,
+        x: step.devData.x, y: step.devData.y, ip: null, ports: meta.ports
+      });
+      logMsg(`Placed ${step.devData.label} at (${step.devData.x}, ${step.devData.y}) [-$${currentLevel.economics.deviceCosts[step.devData.type]}]`);
+      updateEconomics();
+    }
+    highlightNodeId = step.devData.id;
+    pulseRing = { x: step.devData.x, y: step.devData.y, color: meta.color, radius: 10 + t * 14 };
+  } else if (step.kind === 'pull_cable') {
+    let cable = cables.find(c => c.from === step.linkData.from && c.to === step.linkData.to);
+    if (!cable) {
+      const a = nodes.find(n => n.id === step.linkData.from);
+      const b = nodes.find(n => n.id === step.linkData.to);
+      if (a && b) {
+        const mode = step.routeMode || 'wall';
+        const path = buildPath(a, b, mode);
+        const { meters, drills, roofDrops } = measurePath(path, mode);
+        cable = {
+          from: a.id, to: b.id, type: step.linkData.type, mode,
+          meters, drills, roofDrops, path, segOffsets: [], drawProgress: 0, logged: false
+        };
+        cables.push(cable);
+        computeCableOffsets();
+      }
+    }
+    if (cable) {
+      cable.drawProgress = Math.min(1, t);
+      if (t >= 1 && !cable.logged) {
+        cable.logged = true;
+        const a = nodes.find(n => n.id === cable.from);
+        const b = nodes.find(n => n.id === cable.to);
+        logMsg(`Connected ${a.label} ↔ ${b.label} (${cable.meters}m ${cable.type}, ${cable.mode})`);
+        updateEconomics();
+      }
+    }
+  } else if (step.kind === 'assign_ip') {
+    const target = nodes.find(n => n.id === step.nodeId);
+    if (target && target.ip !== step.ip) {
+      target.ip = step.ip;
+      logMsg(`Assigned ${step.ip} → ${target.label}`, 'log-ok');
+    }
+    highlightNodeId = step.nodeId;
+  }
+}
+
+function finishBuildAndLaunchPackets() {
+  highlightNodeId = null;
+  pulseRing = null;
+  clearBlockHighlights();
+  simMode = 'packets';
+  setPhaseBanner('PHASE 4: TRAFFIC TEST', 'Setup complete! Transmitting green data packets to Server...');
+  launchPacketSimulation(true);
+}
+
+function runSimulation() {
+  cancelAnimationFrame(animFrame);
+  simMode = 'packets';
+  isPaused = false;
+  document.getElementById('pauseBtn').textContent = '⏸ Pause';
+  launchPacketSimulation(false);
+}
+
+function checkLevelObjectives() {
+  if (currentLevel.levelId === 2) {
+    if (!nodes.some(n => n.type === 'ap')) return 'Level 2 requires a Wi-Fi AP ($110).';
+  }
+  if (currentLevel.levelId === 3) {
+    if (!nodes.some(n => n.type === 'switch8')) return 'Level 3 requires an 8-Switch ($130).';
+    if (!nodes.some(n => n.type === 'router')) return 'Level 3 requires a Router ($160).';
+    if (!nodes.some(n => n.type === 'gateway')) return 'Level 3 requires a Gateway ($210).';
+    if (!cables.some(c => c.type === 'cat6a' || c.type === 'fibre')) return 'Level 3 requires Cat6a ($6/m) or Fibre ($10/m).';
+  }
+  return null;
+}
+
+function isWirelessInRange(ep) {
+  const aps = nodes.filter(n => n.type === 'ap');
+  return aps.some(ap => Math.hypot(ep.x - ap.x, ep.y - ap.y) <= WIFI_RADIUS_CELLS);
+}
+
+function launchPacketSimulation(fromSetupDemo) {
+  packets = [];
+  const totalCost = updateEconomics();
+
+  if (totalCost > currentLevel.economics.budget) {
+    logMsg(`OVER BUDGET: $${totalCost} > $${currentLevel.economics.budget}.`, 'log-err');
+    setPhaseBanner('FAILED', 'Total cost exceeds level budget.');
+    simMode = 'none';
+    return;
+  }
+
+  const objErr = checkLevelObjectives();
+  if (objErr) {
+    logMsg(`OBJECTIVE CHECK: ${objErr}`, 'log-err');
+    setPhaseBanner('OBJECTIVE MISSING', objErr);
+    simMode = 'none';
+    return;
+  }
+
+  if (!fromSetupDemo) {
+    let hostId = parseInt(document.getElementById('blkStartId').value, 10);
+    const printerStatic = parseInt(document.getElementById('blkPrinterId').value, 10);
+    const iotStatic = parseInt(document.getElementById('blkIotId').value, 10);
+    const inc = parseInt(document.getElementById('blkIncrement').value, 10);
+
+    getActiveEndpoints().forEach(dev => {
+      if (dev.type === 'printer') {
+        dev.ip = `192.168.1.${printerStatic}`;
+      } else if (dev.type === 'iot') {
+        dev.ip = `192.168.1.${iotStatic}`;
+      } else {
+        dev.ip = `192.168.1.${hostId}`;
+        hostId += inc;
+      }
+    });
+    cables.forEach(c => { c.drawProgress = 1; });
+    draw();
+  }
+
+  const ips = nodes.filter(n => n.ip).map(n => n.ip);
+  if (new Set(ips).size !== ips.length) {
+    logMsg(`IP CONFLICT: Duplicate IPv4 address assigned! Check static/increment settings.`, 'log-err');
+    setPhaseBanner('IP CONFLICT', 'Duplicate IPv4 address detected.');
+    simMode = 'none';
+    return;
+  }
+
+  const aps = nodes.filter(n => n.type === 'ap');
+  for (const ep of getActiveEndpoints()) {
+    if (ep.wireless) {
+      const nearestAp = aps.find(ap => Math.hypot(ep.x - ap.x, ep.y - ap.y) <= WIFI_RADIUS_CELLS);
+      if (!nearestAp) {
+        logMsg(`OUT OF WI-FI RANGE: ${ep.label} is outside AP coverage radius.`, 'log-err');
+        setPhaseBanner('WI-FI OUT OF RANGE', `${ep.label} needs a closer Wi-Fi AP.`);
+        simMode = 'none';
+        return;
+      }
+      const apPath = findPathToServer(nearestAp.id, 'srv_1');
+      if (!apPath) {
+        logMsg(`AP UNREACHABLE: ${nearestAp.label} has no wired cable path to Server.`, 'log-err');
+        setPhaseBanner('AP OFFLINE', `${nearestAp.label} must be cabled to the network.`);
+        simMode = 'none';
+        return;
+      }
+      // Synthetic wireless hop prepended to wired path to server
+      packets.push({
+        wirelessStart: { x: ep.x, y: ep.y },
+        wirelessEnd: { x: nearestAp.x, y: nearestAp.y },
+        onWirelessHop: true,
+        path: apPath,
+        segIndex: 0,
+        progress: 0
+      });
+    } else {
+      const path = findPathToServer(ep.id, 'srv_1');
+      if (!path) {
+        logMsg(`NO ROUTE: ${ep.label} (${ep.ip}) cannot reach Server.`, 'log-err');
+        setPhaseBanner('DISCONNECTED', `${ep.label} has no route to Server.`);
+        simMode = 'none';
+        return;
+      }
+      packets.push({ onWirelessHop: false, path, segIndex: 0, progress: 0 });
+    }
+  }
+
+  logMsg(`Sending packets (${detectTopology()} topology)...`, 'log-info');
+  lastTs = performance.now();
+  tickLoop(lastTs);
+}
+
+function findPathToServer(startId, targetId) {
+  const queue = [[startId]];
+  const visited = new Set([startId]);
+  while (queue.length > 0) {
+    const path = queue.shift();
+    const curr = path[path.length - 1];
+    if (curr === targetId) return path;
+    const neighbors = cables
+      .filter(c => c.from === curr || c.to === curr)
+      .map(c => (c.from === curr ? c.to : c.from));
+    for (const next of neighbors) {
+      if (!visited.has(next)) {
+        visited.add(next);
+        queue.push([...path, next]);
+      }
+    }
+  }
+  return null;
+}
+
+function tickLoop(now) {
+  if (isPaused) return;
+  const dt = (now - lastTs) * SPEEDS[speedIdx];
+  lastTs = now;
+
+  if (simMode === 'build') {
+    const step = simTimeline[simStepIdx];
+    if (step) {
+      simStepElapsed += dt;
+      const t = Math.min(1, simStepElapsed / step.duration);
+      applyTimelineStep(step, t);
+      if (simStepElapsed >= step.duration) {
+        simStepIdx++;
+        simStepElapsed = 0;
+      }
+    } else {
+      finishBuildAndLaunchPackets();
+    }
+    draw();
+    animFrame = requestAnimationFrame(tickLoop);
+    return;
+  }
+
+  if (simMode === 'packets') {
+    let delivered = 0;
+    const speedScale = SPEEDS[speedIdx];
+    packets.forEach(pkt => {
+      if (pkt.onWirelessHop) {
+        pkt.progress += 0.025 * speedScale;
+        if (pkt.progress >= 1) {
+          pkt.progress = 0;
+          pkt.onWirelessHop = false;
+        }
+        return;
+      }
+      if (pkt.segIndex >= pkt.path.length - 1) {
+        delivered++;
+        return;
+      }
+      const idA = pkt.path[pkt.segIndex];
+      const idB = pkt.path[pkt.segIndex + 1];
+      const cable = cables.find(c => (c.from === idA && c.to === idB) || (c.from === idB && c.to === idA));
+      pkt.progress += currentLevel.economics.cables[cable.type].speed * speedScale;
+      if (pkt.progress >= 1) {
+        pkt.progress = 0;
+        pkt.segIndex++;
+      }
+    });
+
+    document.getElementById('pktDisplay').textContent = `${delivered} / ${packets.length}`;
+    draw();
+
+    if (delivered === packets.length) {
+      logMsg(`LEVEL COMPLETE! All ${packets.length} packets delivered within $${currentLevel.economics.budget}.`, 'log-ok');
+      setPhaseBanner('COMPLETE', `All ${packets.length} packets reached Server within budget.`);
+      simMode = 'none';
+      return;
+    }
+    animFrame = requestAnimationFrame(tickLoop);
+  }
+}
+
+function getOffsetSegment(p1, p2, offsetPx) {
+  const x1 = p1.x * CELL + CELL / 2;
+  const y1 = p1.y * CELL + CELL / 2;
+  const x2 = p2.x * CELL + CELL / 2;
+  const y2 = p2.y * CELL + CELL / 2;
+
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len;
+  const ny = dx / len;
+
+  return {
+    x1: x1 + nx * offsetPx,
+    y1: y1 + ny * offsetPx,
+    x2: x2 + nx * offsetPx,
+    y2: y2 + ny * offsetPx
+  };
+}
+
+function getNodeColor(n) {
+  if (n.type === 'server') return '#22c55e';
+  if (n.type === 'laptop') return '#38bdf8';
+  if (n.type === 'iot') return '#facc15';
+  if (isDeviceTool(n.type)) return getDeviceMeta(n.type).color;
+  return '#60a5fa';
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Grid dots
+  ctx.fillStyle = '#1e293b';
+  for (let x = 0; x < currentLevel.grid.cols; x++) {
+    for (let y = 0; y < currentLevel.grid.rows; y++) {
+      ctx.fillRect(x * CELL + CELL / 2 - 1, y * CELL + CELL / 2 - 1, 2, 2);
+    }
+  }
+
+  // Rooms
+  currentLayout.rooms.forEach(r => {
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(r.x * CELL, r.y * CELL, r.w * CELL, r.h * CELL);
+    ctx.fillStyle = '#64748b';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText(r.name.toUpperCase(), r.x * CELL + 8, r.y * CELL + 15);
+  });
+
+  // Interior Walls
+  currentLayout.walls.forEach(w => {
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(w.x1 * CELL, w.y1 * CELL);
+    ctx.lineTo(w.x2 * CELL, w.y2 * CELL);
+    ctx.stroke();
+  });
+
+  // Wi-Fi AP Coverage Rings
+  nodes.filter(n => n.type === 'ap').forEach(ap => {
+    const cx = ap.x * CELL + CELL / 2;
+    const cy = ap.y * CELL + CELL / 2;
+    ctx.save();
+    ctx.fillStyle = 'rgba(6, 182, 212, 0.08)';
+    ctx.strokeStyle = 'rgba(34, 211, 238, 0.45)';
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, WIFI_RADIUS_CELLS * CELL, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // Cables (solid along-wall vs dashed through-roof)
+  cables.forEach(c => {
+    ctx.save();
+    ctx.strokeStyle = currentLevel.economics.cables[c.type].color;
+    ctx.lineWidth = c.type === 'fibre' ? 3.8 : c.type === 'cat6a' ? 3.2 : 2.3;
+    if (c.mode === 'roof') {
+      ctx.setLineDash([7, 5]);
+    }
+    const progress = c.drawProgress === undefined ? 1 : c.drawProgress;
+    const totalSegs = c.path.length - 1;
+    const activeFloatSeg = progress * totalSegs;
+
+    for (let i = 0; i < totalSegs; i++) {
+      if (i > activeFloatSeg) break;
+      const segFrac = i + 1 <= activeFloatSeg ? 1 : Math.max(0, activeFloatSeg - i);
+      const off = (c.segOffsets && c.segOffsets[i]) || 0;
+      const seg = getOffsetSegment(c.path[i], c.path[i + 1], off);
+      const endX = seg.x1 + (seg.x2 - seg.x1) * segFrac;
+      const endY = seg.y1 + (seg.y2 - seg.y1) * segFrac;
+
+      ctx.beginPath();
+      ctx.moveTo(seg.x1, seg.y1);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+    }
+    ctx.restore();
+  });
+
+  // Placement pulse ring
+  if (pulseRing) {
+    ctx.strokeStyle = pulseRing.color;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(pulseRing.x * CELL + CELL / 2, pulseRing.y * CELL + CELL / 2, pulseRing.radius || 18, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Nodes
+  nodes.forEach(n => {
+    const cx = n.x * CELL + CELL / 2;
+    const cy = n.y * CELL + CELL / 2;
+
+    if (highlightNodeId === n.id) {
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 17, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = selectedNode && selectedNode.id === n.id ? '#ffffff' : getNodeColor(n);
+    ctx.beginPath();
+    ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(n.label, cx, cy - 15);
+
+    if (n.ip) {
+      ctx.fillStyle = '#4ade80';
+      ctx.font = '10px monospace';
+      ctx.fillText(n.ip, cx, cy + 22);
+    }
+  });
+  ctx.textAlign = 'left';
+
+  // Packets
+  packets.forEach(pkt => {
+    let px, py;
+    if (pkt.onWirelessHop) {
+      const x1 = pkt.wirelessStart.x * CELL + CELL / 2;
+      const y1 = pkt.wirelessStart.y * CELL + CELL / 2;
+      const x2 = pkt.wirelessEnd.x * CELL + CELL / 2;
+      const y2 = pkt.wirelessEnd.y * CELL + CELL / 2;
+      px = x1 + (x2 - x1) * pkt.progress;
+      py = y1 + (y2 - y1) * pkt.progress;
+    } else {
+      if (pkt.segIndex >= pkt.path.length - 1) return;
+      const a = nodes.find(n => n.id === pkt.path[pkt.segIndex]);
+      const b = nodes.find(n => n.id === pkt.path[pkt.segIndex + 1]);
+      const cable = cables.find(c => (c.from === a.id && c.to === b.id) || (c.from === b.id && c.to === a.id));
+      if (!cable) return;
+      const p1 = cable.path[0], p2 = cable.path[1] || p1;
+      const off = (cable.segOffsets && cable.segOffsets[0]) || 0;
+      const seg = getOffsetSegment(p1, p2, off);
+      px = seg.x1 + (seg.x2 - seg.x1) * pkt.progress;
+      py = seg.y1 + (seg.y2 - seg.y1) * pkt.progress;
+    }
+
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.arc(px, py, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+loadLevel(1);
+</script>
+</body>
+</html>

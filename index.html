@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title>NetBuilder – Network Tycoon</title>
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+
+<body>
+    <header>
+        <div class=bl><b>🌐 NetBuilder</b><select id=lvS onchange="loadLevel(this.value)"></select><select id=lyS
+                onchange="swLay(this.value)"></select></div>
+        <div class=hud>
+            <div>Cost <span id=cost>$0</span> / <span id=bud>$0</span></div>
+            <div>Drills <span id=dr>0</span></div>
+            <div>Roof drops <span id=rf>0</span></div>
+            <div>Topology <span id=topo style="color:var(--a)">None</span></div>
+            <div>Packets <span id=pk>0 / 0</span></div>
+        </div>
+    </header>
+    <main>
+        <section class=ma>
+            <div class=tbar id=tbar><button id=mW class=on onclick="setMode('wall')">Along Wall</button><button id=mR
+                    onclick="setMode('roof')">Through Roof</button></div>
+            <div class=tbar>
+                <button class=nb onclick="openNotes(0)">📖 Study Notes</button><button class=sb onclick="openSol()">💡
+                    Show Solution</button><button onclick="startQuiz('')">❓ Quiz</button><button onclick="openEd()">✏️
+                    Level Editor</button><button onclick="$('art').classList.add('open')">🎨 Art</button><button
+                    onclick="out=!out;logM(out?'Mains power OFF':'Mains power restored','i');draw()">⚡ Power
+                    Outage</button><button onclick="resetLevel()">Clear</button><button class=sm onclick="startSim()">▶
+                    Simulate Setup</button><button class=go onclick="runT()">Run Test</button>
+            </div>
+            <div class=rv><span id=pb>IDLE</span><span id=cap></span><button id=pz
+                    onclick="togglePause()">Pause</button><button onclick="stepF()">Step</button><button
+                    onclick="cycSpd()" id=spd>1x</button></div>
+            <div class=cw><canvas id=c width=760 height=456></canvas></div>
+        </section>
+        <aside>
+            <h2>Mission &amp; DHCP Block Script</h2><span class=tg id=tag></span>
+            <div class=bf id=brief></div>
+            <div class=ob><b style="color:var(--a)">Objectives</b>
+                <ul id=objs></ul>
+            </div>
+            <div class=bw>
+                <div id=bv class="bk bv">SET <code>host_id</code> TO <input type=number id=bId min=2 max=240></div>
+                <div id=bl class="bk bl">FOR EACH <code>device</code> IN <code>network</code></div>
+                <div id=bpr class="bk bi">IF Printer → IP 192.168.1.<input type=number id=bPr min=2 max=254></div>
+                <div id=bio class="bk bi">IF IoT → IP 192.168.1.<input type=number id=bIo min=2 max=254></div>
+                <div id=bpc class="bk ba">ELSE (PC/Laptop) IP = 192.168.1.<code>host_id</code></div>
+                <div id=binc class="bk ba"><select id=bInc>
+                        <option value=1>CHANGE host_id BY +1</option>
+                        <option value=0>DO NOTHING</option>
+                    </select></div>
+            </div>
+            <div id=log></div>
+        </aside>
+    </main>
+
+    <div id=nt class=mb>
+        <div class=mc>
+            <div class=mh>Study Notes<button onclick="cl('nt')">Close</button></div>
+            <div class=md>
+                <div class=tbar id=ntt></div>
+                <div id=ntb class=md style="padding:0"></div>
+            </div>
+        </div>
+    </div>
+    <div id=sol class=mb>
+        <div class=mc>
+            <div class=mh><span id=solT>Solution</span><button onclick="cl('sol')">Close</button></div>
+            <div class=md id=solB></div>
+        </div>
+    </div>
+    <div id=qz class=mb>
+        <div class=mc>
+            <div class=mh>Network Quiz<span><button onclick="startQuiz('C')">Checkpoint</button> <button
+                        onclick="startQuiz('I')">IGCSE</button> <button onclick="startQuiz('')">All</button> <button
+                        onclick="cl('qz')">Close</button></span></div>
+            <div class=md id=qb></div>
+        </div>
+    </div>
+    <div id=ed class=mb>
+        <div class=mc>
+            <div class=mh>Level Editor<button onclick="cl('ed')">Close</button></div>
+            <div class=md>
+                <label>Title<input id=eT></label><label>Briefing<input id=eB></label><label>Budget $<input id=eBu
+                        type=number></label><label>Wall-drill cost $<input id=eD type=number></label><label>Roof-drop
+                    cost $<input id=eR type=number></label>
+                <div class=tbar><button class=sm onclick="applyEd()">Apply fields</button><button onclick="cpJ()">Copy
+                        JSON</button><button class=go style="margin:0" onclick="impJ()">Import JSON</button></div>
+                <label>Level JSON (edit rooms, walls, nodes, req, demo, then Import)<textarea id=eJ></textarea></label>
+            </div>
+        </div>
+    </div>
+    <div id=cli class=mb>
+        <div class=mc>
+            <div class=mh><span id=cliT>Console</span><button onclick="cl('cli')">Close</button></div>
+            <div class=md>
+                <pre id=cliO
+                    style="margin:0;background:#020617;color:#4ade80;padding:8px;border-radius:6px;min-height:150px;max-height:260px;overflow:auto;font-size:.76rem;white-space:pre-wrap"></pre>
+                <input id=cliI placeholder="type help, then Enter"
+                    onkeydown="if(event.key=='Enter'){cliRun(this.value);this.value=''}">
+            </div>
+        </div>
+    </div>
+    <div id=art class=mb>
+        <div class=mc>
+            <div class=mh>Art &amp; Background<button onclick="cl('art')">Close</button></div>
+            <div class=md>
+                <label>Replace<select id=aK></select></label><label>Image URL<input id=aU
+                        placeholder="https://..."></label><label>…or upload<input id=aF type=file
+                        accept="image/*"></label>
+                <div class=tbar><button class=sm onclick="applyArt()">Apply</button><button onclick="resetArt()">Reset
+                        Default Art</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./js/script.js" defer></script>
+</body>
+</html>
